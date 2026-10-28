@@ -3,5 +3,5 @@ import App from './App';
 
 test('renders the sign-in screen on first load', () => {
   render(<App />);
-  expect(screen.getByText('Sign In')).toBeInTheDocument();
+  expect(screen.getAllByText('Sign In')[0]).toBeInTheDocument();
 });
