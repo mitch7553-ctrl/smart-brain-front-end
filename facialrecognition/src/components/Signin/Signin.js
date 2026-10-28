@@ -5,7 +5,7 @@ class Signin extends React.Component {
     super(props);
     this.state = {
       signInEmail: '',
-      signInPassword: ''
+      signInPassword: '', error: '', isSubmitting: false
     }
   }
 
@@ -17,22 +17,24 @@ class Signin extends React.Component {
     this.setState({signInPassword: event.target.value})
   }
 
-  onSubmitSignIn = () => {
-    fetch('https://backend-w6n9.onrender.com/signin', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        email: this.state.signInEmail,
-        password: this.state.signInPassword
-      })
-    })
-      .then(response => response.json())
-      .then(user => {
-        if (user.id) {
-          this.props.loadUser(user)
-          this.props.onRouteChange('home');
-        }
-      })
+  onSubmitSignIn = async () => {
+    this.setState({ error: '', isSubmitting: true });
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://backend-w6n9.onrender.com'}/signin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: this.state.signInEmail, password: this.state.signInPassword })
+      });
+      if (!response.ok) throw new Error('Unable to sign in. Check your credentials.');
+      const user = await response.json();
+      if (!user.id) throw new Error('Unexpected server response');
+      this.props.loadUser(user);
+      this.props.onRouteChange('home');
+    } catch (error) {
+      this.setState({ error: error.message });
+    } finally {
+      this.setState({ isSubmitting: false });
+    }
   }
 
   render() {
@@ -67,11 +69,13 @@ class Signin extends React.Component {
             <div className="">
               <input
                 onClick={this.onSubmitSignIn}
+                disabled={this.state.isSubmitting}
                 className="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib"
                 type="submit"
                 value="Sign in"
               />
             </div>
+            {this.state.error && <p role="alert">{this.state.error}</p>}
             <div className="lh-copy mt3">
               <p  onClick={() => onRouteChange('register')} className="f6 link dim black db pointer">Register</p>
             </div>
