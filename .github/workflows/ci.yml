@@ -1,0 +1,18 @@
+name: Frontend CI
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: facialrecognition
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: CI=true npm run build
+      - run: CI=true npm test -- --watch=false --passWithNoTests

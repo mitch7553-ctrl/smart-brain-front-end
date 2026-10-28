@@ -35,3 +35,7 @@ This is the front-end application for Smart Brain, an interactive web app that d
 
 ## Backend Integration
 This front-end connects to the Smart Brain Backend API for user authentication, database updates, and secure Clarifai API calls.
+
+## Authentication integration (draft)
+
+The matching backend branch issues an eight-hour bearer token at sign-in or registration. The frontend holds it in memory (not localStorage) and sends it on detection and entry-count requests. Sign out or browser reload clears it. Configure `REACT_APP_API_URL` for the matching backend. Deploy the two branches together after staging integration tests; backend requires a strong `AUTH_TOKEN_SECRET` and `CLARIFAI_PAT` environment variables.
