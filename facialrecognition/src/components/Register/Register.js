@@ -6,7 +6,7 @@ class Register extends React.Component {
     this.state = {
       email: '',
       password: '',
-      name: ''
+      name: '', error: '', isSubmitting: false
     }
   }
 
@@ -22,23 +22,24 @@ class Register extends React.Component {
     this.setState({password: event.target.value})
   }
 
-  onSubmitSignIn = () => {
-    fetch('https://backend-w6n9.onrender.com/register', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        email: this.state.email,
-        password: this.state.password,
-        name: this.state.name
-      })
-    })
-      .then(response => response.json())
-      .then(user => {
-        if (user.id) {
-          this.props.loadUser(user)
-          this.props.onRouteChange('home');
-        }
-      })
+  onSubmitSignIn = async () => {
+    this.setState({ error: '', isSubmitting: true });
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://backend-w6n9.onrender.com'}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: this.state.email, password: this.state.password, name: this.state.name })
+      });
+      if (!response.ok) throw new Error('Unable to register. Check your information or try another email.');
+      const user = await response.json();
+      if (!user.id) throw new Error('Unexpected server response');
+      this.props.loadUser(user);
+      this.props.onRouteChange('home');
+    } catch (error) {
+      this.setState({ error: error.message });
+    } finally {
+      this.setState({ isSubmitting: false });
+    }
   }
 
   render() {
@@ -79,9 +80,11 @@ class Register extends React.Component {
                 />
               </div>
             </fieldset>
+            {this.state.error && <p role="alert">{this.state.error}</p>}
             <div className="">
               <input
                 onClick={this.onSubmitSignIn}
+                disabled={this.state.isSubmitting}
                 className="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib"
                 type="submit"
                 value="Register"
