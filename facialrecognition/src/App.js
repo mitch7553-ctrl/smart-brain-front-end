@@ -25,12 +25,14 @@ const initialState = {
 class App extends Component {
   state = { ...initialState, user: { ...initialState.user } };
   requestId = 0;
+  authToken = null;
 
   componentWillUnmount() {
     this.requestId += 1;
   }
 
   loadUser = (data) => {
+    this.authToken = data.token || null;
     this.setState({ user: {
       id: data.id,
       name: data.name,
@@ -77,6 +79,10 @@ class App extends Component {
       this.setState({ error: 'Enter a valid HTTP or HTTPS image URL.' });
       return;
     }
+    if (!this.authToken) {
+      this.setState({ error: 'Your session has expired. Please sign in again.' });
+      return;
+    }
     const currentRequest = ++this.requestId;
     this.faceResponse = null;
     this.setState({ imageUrl: input, box: null, error: '', isDetecting: true });
@@ -84,7 +90,7 @@ class App extends Component {
     try {
       const response = await fetch(`${API_URL}/imageurl`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${this.authToken}` },
         body: JSON.stringify({ input })
       });
       if (!response.ok) throw new Error('Face detection failed. Please try another image.');
@@ -132,6 +138,7 @@ class App extends Component {
     if (route === 'signout') {
       this.requestId += 1;
       this.faceResponse = null;
+      this.authToken = null;
       return this.setState({ ...initialState, user: { ...initialState.user } });
     }
     this.setState({ route, isSignedIn: route === 'home' });
